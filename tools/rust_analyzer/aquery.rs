@@ -208,6 +208,15 @@ fn consolidate_crate_specs(crate_specs: Vec<CrateSpec>) -> anyhow::Result<BTreeS
                     existing.proc_macro_dylib_path.replace(dylib_path.clone());
                 }
             }
+
+            // Prefer using workspace for root_module path if possible.
+            // A test crate might get an __EXEC_ROOT__-based root_module when depending
+            // on a library crate with mixed generated sources, for example.
+            if existing.root_module.starts_with("__EXEC_ROOT__")
+                && spec.root_module.starts_with("__WORKSPACE__")
+            {
+                existing.root_module = spec.root_module;
+            }
         } else {
             consolidated_specs.insert(spec.crate_id.clone(), spec);
         }
