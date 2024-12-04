@@ -181,6 +181,15 @@ fn consolidate_crate_specs(crate_specs: Vec<CrateSpec>) -> anyhow::Result<BTreeS
             spec.cfg.retain(|cfg| !existing.cfg.contains(cfg));
             existing.cfg.extend(spec.cfg);
 
+            match (existing.source.as_mut(), spec.source) {
+                (None, new @ Some(_)) => existing.source = new,
+                (Some(existing_source), Some(new_source)) => {
+                    existing_source.exclude_dirs.extend(new_source.exclude_dirs);
+                    existing_source.include_dirs.extend(new_source.include_dirs);
+                }
+                _ => (),
+            }
+
             // display_name should match the library's crate name because Rust Analyzer
             // seems to use display_name for matching crate entries in rust-project.json
             // against symbols in source files. For more details, see
